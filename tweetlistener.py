@@ -19,7 +19,7 @@ class TweetListener(StreamListener):
         
         jsondata = json.loads(data)
         if jsondata["coordinates"] != None:
-            print "here!"
+            print "coordinates"
             self.on_status(data)
             #not sure what these parts do
             # if 'limit' in data:
@@ -36,8 +36,8 @@ class TweetListener(StreamListener):
 
     def on_status(self, status):
         self.output.write(status + "\n")
-
         self.counter += 1
+        print "Tweet #", self.counter
 
         if self.counter >= 20000:
             self.output.close()
