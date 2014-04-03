@@ -27,9 +27,10 @@ auth.set_access_token(key, secret)
 api        = tweepy.API(auth)
 
 def main():
-    track = ['#obamacare',]
+    track = ['#obamacare',] #change to w/e
+    file_prefix = 'obamacare' #change to what you want the file prefixed with 
  
-    listen = TweetListener(api, 'obamacare')
+    listen = TweetListener(api, file_prefix)
     stream = tweepy.Stream(auth, listen)
 
     print "Streaming started..."
