@@ -30,7 +30,7 @@ def synonyms(word, sentimentList):
 		for word in similarWord.lemma_names:
 			word = word.lower()
 			if word in sentimentList:
-				score += sentimentList[word]
+				score += sum(sentimentList[word])/len(sentimentList[word])
 				score += 1
 	#takes the average of the words
 	return score[0]/score[1]
