@@ -27,7 +27,7 @@ def synonyms(word, sentimentList):
 	list = wn.synsets(word)
 	score = [0, 0]
 	for similarWord in list:
-		for word in similarWord:
+		for word in similarWord.lemma_names:
 			word = word.lower()
 			if word in sentimentList:
 				score += sentimentList[word]
