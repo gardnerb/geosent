@@ -44,9 +44,20 @@ def synonyms(word, sentimentList):
 	#takes the average of the words
 	if score > 0:
 		score = 1
-	else:
+	elif score < 0:
 		score = -1
 	return score
+
+#assuming tweet is a string
+def calculateSentiment(tweet, sentimentList):
+	tweetWords = tweet.split()
+	tweetValue = 0
+	for word in tweetWords:
+		if word not in sentimentList:
+			tweetValue += synonyms(word, sentimentList)
+		else:
+			tweetValue += sentimentList[word]
+	return tweetValue
 
 '''
 def main(argv):
