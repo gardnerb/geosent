@@ -10,30 +10,43 @@ from operator import itemgetter
 #if you don't have pip also run: sudo easy_install pip
 #then to get the data files: python -m nltk.downloader all
 
-def sentiment(sentimentList, sList):
+def sentimentL1(sentimentList, sList):
 	s = open(sList, 'r')
 	for line in s:
 		line = line.rstrip()
 		pair = line.split()
-		if pair[0] is in sentimentList:
-			sentimentList[pair[0]].append(pair[1])
-		else:
-			sentimentList[pair[0]] = []
-			sentimentList[pair[0]].append(pair[1])
+		if pair[0] not in sentimentList:
+			if pair[1] > 0:
+				sentimentList[pair[0]] = 1
+			else:
+				sentimentList[pair[0]] = -1
 	s.close()
 	return sentimentList
 
+def sentimentL2(sentimentList, sList, value):
+	s = open(sList, 'r')
+	for line in s:
+		line = line.rstrip()
+		if line not in sentimentList:
+			if value > 0:
+				sentimentList[line] = 1
+			else:
+				sentimentList[line] = -1
+
 def synonyms(word, sentimentList):
 	list = wn.synsets(word)
-	score = [0, 0]
+	score = 0
 	for similarWord in list:
 		for word in similarWord.lemma_names:
 			word = word.lower()
 			if word in sentimentList:
-				score += sum(sentimentList[word])/len(sentimentList[word])
-				score += 1
+				score += sentimentList[word]
 	#takes the average of the words
-	return score[0]/score[1]
+	if score > 0:
+		score = 1
+	else:
+		score = -1
+	return score
 
 '''
 def main(argv):
