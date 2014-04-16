@@ -112,7 +112,6 @@ def location(user_loc):
     elif re.search("new jersey", user_loc): return "nj"
     elif re.search("new mexico", user_loc): return "nm"
     elif re.search("new york", user_loc): return "ny"
-    elif re.search("nyc", user_loc): return "ny"
     elif re.search("north carolina", user_loc): return "nc"
     elif re.search("north dakota", user_loc): return "nd"
     elif re.search("ohio", user_loc): return "oh"
@@ -131,10 +130,22 @@ def location(user_loc):
     elif re.search("west virginia", user_loc): return "wv"
     elif re.search("wisconsin", user_loc): return "wi"
     elif re.search("wyoming", user_loc): return "wy"
+    elif re.search("nyc", user_loc): return "ny"
+    elif re.search("new york city", user_loc): return "ny"
+    elif re.search("houston", user_loc): return "tx"
+    elif re.search("los angeles", user_loc): return "ca"
+    elif re.search("seattle", user_loc): return "wa"
+    elif re.search("san francisco", user_loc): return "ca"
+    elif re.search("phoenix", user_loc): return "az"
+    elif re.search("las vegas", user_loc): return "nv"
+    elif re.search("miami", user_loc): return "fl"
     else: return "null"    
 
 # Clean SGML tags from a file
 def clean(tweet):
+
+    tweet = tweet.encode('utf-8', 'ignore')
+    #print str(tweet)
 
     tweet_data = list()
     # Convert all letters to lower case
@@ -148,11 +159,11 @@ def clean(tweet):
     # Remove numbers
     tweet = re.sub("[0-9]*", "", tweet)
     # Remove unnecessary punctuation
-    tweet = re.sub("\s[-\.,\/:]+\s", " ", tweet)
-    tweet = re.sub("(-|\.|,){2,}", " ", tweet)
+    #tweet = re.sub("\s[-\.,\/:]+\s", " ", tweet)
+    #tweet = re.sub("(-|\.|,){2,}", " ", tweet)
     # Remove parenthesis
-    tweet = re.sub("(\(|\))", "", tweet)
-    # Remove commas that are not in a number
+    #tweet = re.sub("(\(|\))", "", tweet)
+    # Remove commas
     tweet = re.sub("([a-z]), ", "\g<1> ", tweet)
     # Remove periods at end of words
     tweet = re.sub("([a-z]+)(\.|\?|!|;|:) ", "\g<1> ", tweet)
@@ -174,17 +185,16 @@ def clean(tweet):
     tweet = re.sub("\'re", " are", tweet)
     tweet = re.sub("n\'t", " not", tweet)
     tweet = re.sub("\'s", " is", tweet)
-    # Split word-letter and letter-word combinations (eg 16degrees)
-    tweet = re.sub("([a-z]+)(-?)([0-9]+)", "\g<1> \g<3>", tweet)
-    tweet = re.sub("([0-9]+)(-?)([a-z]+)", "\g<1> \g<3>", tweet)
-    # Split numerical ranges
-    tweet = re.sub("(\d+)-(\d+)", "\g<1> \g<2>", tweet)
+    # Shrink all repeated spaces
+    tweet = re.sub("\s+", " ", tweet)
+    
+    # Remove stopwords
+    #for word in tweet.split(" "):
+    #    if word:
+    #        tweet_data.append(word)
 
-    for word in tweet.split(" "):
-        if word:
-            tweet_data.append(word)
-
-    return tweet_data
+    #print tweet
+    return tweet
 
 def main(argv):
 
@@ -199,14 +209,14 @@ def main(argv):
         # Find location
         userProvidedLoc = tweet_obj['user']['location']
         if userProvidedLoc:
-            #print userProvidedLoc
+            print userProvidedLoc
             loc = location(userProvidedLoc)
             #print loc
         # Get and clean text of tweet
         tweet = tweet_obj['text']
         tweet_content = clean(tweet)
         #print tweet.encode('utf-8')
-        #print tweet_content
+        #print tweet_content.encode('utf-8')
         # Insert into dict
         if loc in tweet_dict.keys():
             tweet_dict[loc].append(tweet_content)
