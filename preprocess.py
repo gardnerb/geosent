@@ -33,12 +33,14 @@ def sentimentL2(sentimentList, sList, value):
     for line in s:
         line = line.rstrip()
         if i > 35:
-            if line not in sentimentList:
+            if line not in sentimentList.keys():
                 if value > 0:
                     sentimentList[line] = 1
                 else:
                     sentimentList[line] = -1
         i += 1
+    s.close()
+    return sentimentList
 
 def synonyms(word, sentimentList):
     list = wn.synsets(word)
@@ -287,14 +289,20 @@ def main(argv):
 
     tweet_file.close()
     sentimentList = {}
+    print "first round"
     sentimentList = sentimentL1(sentimentList, 'unigrams-pmilexicon1.txt')
+    print "second round"
     sentimentList = sentimentL1(sentimentList, 'unigrams-pmilexicon2.txt')
+    print "third round"
     sentimentList = sentimentL2(sentimentList, 'positive-words.txt', 1)
+    print "fourth round"
     sentimentList = sentimentL2(sentimentList, 'negative-words.txt', -1)
 
     for key in tweet_dict.keys():
+        print key
         for tweet in tweet_dict[key]:
-            tweet_score[loc] += calculateSentiment(tweet, sentimentList)
+            tweet_score[key] += calculateSentiment(tweet, sentimentList)
+        print tweet_score[key]
     print tweet_score
 
 
