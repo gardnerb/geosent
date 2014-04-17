@@ -20,7 +20,7 @@ def sentimentL1(sentimentList, sList):
         line = line.rstrip()
         pair = line.split()
         if pair[0] not in sentimentList:
-            if pair[1] > 0:
+            if float(pair[1]) > 0:
                 sentimentList[pair[0]] = 1
             else:
                 sentimentList[pair[0]] = -1
@@ -65,15 +65,15 @@ def calculateSentiment(tweet, sentimentList):
         if word not in sentimentList:
             syn = synonyms(word, sentimentList)
             tweetValue += syn
-            print word, syn
-            if syn < 0:
-                print "HURRAY!!!!"
+            #print word, syn
+            #if syn < 0:
+            #    print "HURRAY!!!!"
         else:
             syn = sentimentList[word]
-            print word, sentimentList[word]
+            #print word, sentimentList[word]
             tweetValue += syn
-            if syn < 0:
-                print "HURRAY!!!!"
+            #if syn < 0:
+            #    print "HURRAY!!!!"
     return tweetValue
 
 def location(user_loc):
@@ -304,11 +304,8 @@ def main(argv):
     print "third round"
     sentimentList = sentimentL2(sentimentList, 'positive-words.txt', 1)
     print "fourth round"
-    print sentimentList['stuttered']
-
     sentimentList = sentimentL2(sentimentList, 'negative-words.txt', -1)
 
-    print sentimentList['stuttered']
     for key in tweet_dict.keys():
         #print key
         for tweet in tweet_dict[key]:
