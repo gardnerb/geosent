@@ -11,6 +11,70 @@
 import sys
 import re
 import json
+from nltk.corpus import wordnet as wn
+from operator import itemgetter
+
+def sentimentL1(sentimentList, sList):
+    s = open(sList, 'r')
+    for line in s:
+        line = line.rstrip()
+        pair = line.split()
+        if pair[0] not in sentimentList:
+            if float(pair[1]) > 0:
+                sentimentList[pair[0]] = 1
+            else:
+                sentimentList[pair[0]] = -1
+    s.close()
+    return sentimentList
+
+def sentimentL2(sentimentList, sList, value):
+    s = open(sList, 'r')
+    i = 1
+    for line in s:
+        line = line.rstrip()
+        if i > 35:
+            if line not in sentimentList:
+                if value > 0:
+                    sentimentList[line] = 1
+                else:
+                    sentimentList[line] = -1
+        i += 1
+    s.close()
+    return sentimentList
+
+def synonyms(word, sentimentList):
+    list = wn.synsets(word)
+    score = 0
+    for similarWord in list:
+        for word in similarWord.lemma_names:
+            word = word.lower()
+            if word in sentimentList:
+                score += sentimentList[word]
+    #takes the average of the words
+    if score > 0:
+        score = 1
+    elif score < 0:
+        score = -1
+    return score
+
+#assuming tweet is a string
+def calculateSentiment(tweet, sentimentList):
+    tweetWords = tweet.split()
+    tweetValue = 0
+    for word in tweetWords:
+        if word not in sentimentList:
+            syn = synonyms(word, sentimentList)
+            tweetValue += syn
+            #print word, syn
+            #if syn < 0:
+            #    print "HURRAY!!!!"
+        else:
+            syn = sentimentList[word]
+            #print word, sentimentList[word]
+            tweetValue += syn
+            #if syn < 0:
+            #    print "HURRAY!!!!"
+    return tweetValue
 
 def location(user_loc):
     user_loc = user_loc.lower()
@@ -112,7 +176,6 @@ def location(user_loc):
     elif re.search("new jersey", user_loc): return "nj"
     elif re.search("new mexico", user_loc): return "nm"
     elif re.search("new york", user_loc): return "ny"
-    elif re.search("nyc", user_loc): return "ny"
     elif re.search("north carolina", user_loc): return "nc"
     elif re.search("north dakota", user_loc): return "nd"
     elif re.search("ohio", user_loc): return "oh"
@@ -131,10 +194,22 @@ def location(user_loc):
     elif re.search("west virginia", user_loc): return "wv"
     elif re.search("wisconsin", user_loc): return "wi"
     elif re.search("wyoming", user_loc): return "wy"
+    elif re.search("nyc", user_loc): return "ny"
+    elif re.search("new york city", user_loc): return "ny"
+    elif re.search("houston", user_loc): return "tx"
+    elif re.search("los angeles", user_loc): return "ca"
+    elif re.search("seattle", user_loc): return "wa"
+    elif re.search("san francisco", user_loc): return "ca"
+    elif re.search("phoenix", user_loc): return "az"
+    elif re.search("las vegas", user_loc): return "nv"
+    elif re.search("miami", user_loc): return "fl"
     else: return "null"    
 
 # Clean SGML tags from a file
 def clean(tweet):
+
+    tweet = tweet.encode('utf-8', 'ignore')
+    #print str(tweet)
 
     tweet_data = list()
     # Convert all letters to lower case
@@ -148,11 +223,11 @@ def clean(tweet):
     # Remove numbers
     tweet = re.sub("[0-9]*", "", tweet)
     # Remove unnecessary punctuation
-    tweet = re.sub("\s[-\.,\/:]+\s", " ", tweet)
-    tweet = re.sub("(-|\.|,){2,}", " ", tweet)
+    #tweet = re.sub("\s[-\.,\/:]+\s", " ", tweet)
+    #tweet = re.sub("(-|\.|,){2,}", " ", tweet)
     # Remove parenthesis
-    tweet = re.sub("(\(|\))", "", tweet)
-    # Remove commas that are not in a number
+    #tweet = re.sub("(\(|\))", "", tweet)
+    # Remove commas
     tweet = re.sub("([a-z]), ", "\g<1> ", tweet)
     # Remove periods at end of words
     tweet = re.sub("([a-z]+)(\.|\?|!|;|:) ", "\g<1> ", tweet)
@@ -174,25 +249,27 @@ def clean(tweet):
     tweet = re.sub("\'re", " are", tweet)
     tweet = re.sub("n\'t", " not", tweet)
     tweet = re.sub("\'s", " is", tweet)
-    # Split word-letter and letter-word combinations (eg 16degrees)
-    tweet = re.sub("([a-z]+)(-?)([0-9]+)", "\g<1> \g<3>", tweet)
-    tweet = re.sub("([0-9]+)(-?)([a-z]+)", "\g<1> \g<3>", tweet)
-    # Split numerical ranges
-    tweet = re.sub("(\d+)-(\d+)", "\g<1> \g<2>", tweet)
+    # Shrink all repeated spaces
+    tweet = re.sub("\s+", " ", tweet)
+    
+    # Remove stopwords
+    #for word in tweet.split(" "):
+    #    if word:
+    #        tweet_data.append(word)
 
-    for word in tweet.split(" "):
-        if word:
-            tweet_data.append(word)
-
-    return tweet_data
+    #print tweet
+    return tweet
 
 def main(argv):
 
     tweet_dict = dict()
+    tweet_score = dict()
 
     # Open raw tweet file provided on command line
     tweet_file = open(argv, "r")
     tweet_line = tweet_file.readline().replace("\n", "")
+
+    loc = ''
     # For each tweet, process and insert into dict
     while tweet_line:
         tweet_obj = json.loads(tweet_line)
@@ -206,18 +283,35 @@ def main(argv):
         tweet = tweet_obj['text']
         tweet_content = clean(tweet)
         #print tweet.encode('utf-8')
-        #print tweet_content
+        #print tweet_content.encode('utf-8')
         # Insert into dict
         if loc in tweet_dict.keys():
             tweet_dict[loc].append(tweet_content)
         else:
             tweet_dict[loc] = list()
+            tweet_score[loc] = 0
             tweet_dict[loc].append(tweet_content)
 
         tweet_line = tweet_file.readline().replace("\n", "")
 
 
     tweet_file.close()
+    sentimentList = {}
+    print "first round"
+    sentimentList = sentimentL1(sentimentList, 'unigrams-pmilexicon1.txt')
+    print "second round"
+    sentimentList = sentimentL1(sentimentList, 'unigrams-pmilexicon2.txt')
+    print "third round"
+    sentimentList = sentimentL2(sentimentList, 'positive-words.txt', 1)
+    print "fourth round"
+    sentimentList = sentimentL2(sentimentList, 'negative-words.txt', -1)
+
+    for key in tweet_dict.keys():
+        #print key
+        for tweet in tweet_dict[key]:
+            tweet_score[key] += calculateSentiment(tweet, sentimentList)
+        #print tweet_score[key]
+    print tweet_score
 
 
 if __name__ == '__main__':
