@@ -29,13 +29,16 @@ def sentimentL1(sentimentList, sList):
 
 def sentimentL2(sentimentList, sList, value):
     s = open(sList, 'r')
+    i = 1
     for line in s:
         line = line.rstrip()
-        if line not in sentimentList:
-            if value > 0:
-                sentimentList[line] = 1
-            else:
-                sentimentList[line] = -1
+        if i > 35:
+            if line not in sentimentList:
+                if value > 0:
+                    sentimentList[line] = 1
+                else:
+                    sentimentList[line] = -1
+        i += 1
 
 def synonyms(word, sentimentList):
     list = wn.synsets(word)
@@ -255,6 +258,8 @@ def main(argv):
     # Open raw tweet file provided on command line
     tweet_file = open(argv, "r")
     tweet_line = tweet_file.readline().replace("\n", "")
+
+    loc = ''
     # For each tweet, process and insert into dict
     while tweet_line:
         tweet_obj = json.loads(tweet_line)
@@ -282,14 +287,15 @@ def main(argv):
 
     tweet_file.close()
     sentimentList = {}
-    sentimentL1('unigrams-pmilexicon1.txt', sentimentList)
-    sentimentL1('unigrams-pmilexicon2.txt', sentimentList)
-    sentimentL2('positive-words.txt', sentimentList, 1)
-    sentimentL2('negative-words.txt', sentimentList, -1)
+    sentimentList = sentimentL1(sentimentList, 'unigrams-pmilexicon1.txt')
+    sentimentList = sentimentL1(sentimentList, 'unigrams-pmilexicon2.txt')
+    sentimentList = sentimentL2(sentimentList, 'positive-words.txt', 1)
+    sentimentList = sentimentL2(sentimentList, 'negative-words.txt', -1)
 
     for key in tweet_dict.keys():
         for tweet in tweet_dict[key]:
             tweet_score[loc] += calculateSentiment(tweet, sentimentList)
+    print tweet_score
 
 
 if __name__ == '__main__':
