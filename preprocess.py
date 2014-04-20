@@ -29,16 +29,15 @@ def sentimentL1(sentimentList, sList):
 
 def sentimentL2(sentimentList, sList, value):
     s = open(sList, 'r')
-    i = 1
     for line in s:
         line = line.rstrip()
-        if i > 35:
+        if line != '' and line[0] != '#':
             if line not in sentimentList:
-                if value > 0:
-                    sentimentList[line] = 1
-                else:
-                    sentimentList[line] = -1
-        i += 1
+                sentimentList[line] = value
+                #if value > 0:
+                #    sentimentList[line] = 1
+                #else:
+                #    sentimentList[line] = -1
     s.close()
     return sentimentList
 
@@ -62,6 +61,8 @@ def calculateSentiment(tweet, sentimentList):
     tweetWords = tweet.split()
     tweetValue = 0
     for word in tweetWords:
+        if "https?" in word:
+            continue
         if word not in sentimentList:
             syn = synonyms(word, sentimentList)
             tweetValue += syn
@@ -202,7 +203,12 @@ def location(user_loc):
     elif re.search("san francisco", user_loc): return "ca"
     elif re.search("phoenix", user_loc): return "az"
     elif re.search("las vegas", user_loc): return "nv"
-    elif re.search("miami", user_loc): return "fl"
+    elif re.search("dallas", user_loc): return "tx"
+    elif re.search("philadelphia", user_loc): return "pa"
+    elif re.search("san diego", user_loc): return "ca"
+    elif re.search("boston", user_loc): return "ma"
+    elif re.search("denver", user_loc): return "co"
+    elif re.search("detroit", user_loc): return "mi"
     else: return "null"    
 
 # Clean SGML tags from a file
@@ -215,13 +221,17 @@ def clean(tweet):
     # Convert all letters to lower case
     tweet = tweet.lower()
     # Remove URLs
-    tweet = re.sub("http[a-z0-9:\/-?\.#+=]* ", "", tweet)
+    #tweet = re.sub("https?:\/\/[a-z0-9\/\.]*\b*", "", tweet)
+    #tweet = re.sub("https?:\/\/.*\b", "", tweet)
+    #tweet = re.sub("https?://[^\b]*", "", tweet)
     # Remove usernames
     tweet = re.sub("@\w*", "", tweet)
     # Remove "RT" for retweet
     tweet = re.sub("rt", "", tweet)
+    # Remove # before words
+    tweet = re.sub("#([a-z0-9])", "\g<1>", tweet)
     # Remove numbers
-    tweet = re.sub("[0-9]*", "", tweet)
+    #tweet = re.sub("[0-9]*", "", tweet)
     # Remove unnecessary punctuation
     #tweet = re.sub("\s[-\.,\/:]+\s", " ", tweet)
     #tweet = re.sub("(-|\.|,){2,}", " ", tweet)
@@ -232,12 +242,12 @@ def clean(tweet):
     # Remove periods at end of words
     tweet = re.sub("([a-z]+)(\.|\?|!|;|:) ", "\g<1> ", tweet)
     # Replace period at end of acronym... kind of hacky
-    tweet = re.sub("([a-z\.])\.([a-z]+) ", "\g<1>.\g<2>. ", tweet)
+    #tweet = re.sub("([a-z\.])\.([a-z]+) ", "\g<1>.\g<2>. ", tweet)
     # Remove periods and commas at end of numbers
-    tweet = re.sub("(\d+)(\.|,) ", "\g<1> ", tweet)
+    #tweet = re.sub("(\d+)(\.|,) ", "\g<1> ", tweet)
     # Remove unnecessary slashes
-    tweet = re.sub("( \\\\|\\\\ )", " ", tweet)
-    tweet = re.sub("( \/|\/ )", " ", tweet)
+    #tweet = re.sub("( \\\\|\\\\ )", " ", tweet)
+    #tweet = re.sub("( \/|\/ )", " ", tweet)
     # Remove quotation marks
     tweet = re.sub("(\'|\")+(\w*)", "\g<2>", tweet)
     tweet = re.sub("(\w*)(\'|\")+", "\g<1>", tweet)
@@ -257,7 +267,7 @@ def clean(tweet):
     #    if word:
     #        tweet_data.append(word)
 
-    #print tweet
+    #print tweet.encode('utf-8')
     return tweet
 
 def main(argv):
@@ -283,7 +293,7 @@ def main(argv):
         tweet = tweet_obj['text']
         tweet_content = clean(tweet)
         #print tweet.encode('utf-8')
-        #print tweet_content.encode('utf-8')
+        #print tweet_content
         # Insert into dict
         if loc in tweet_dict.keys():
             tweet_dict[loc].append(tweet_content)
@@ -297,14 +307,12 @@ def main(argv):
 
     tweet_file.close()
     sentimentList = {}
-    print "first round"
     sentimentList = sentimentL1(sentimentList, 'unigrams-pmilexicon1.txt')
-    print "second round"
     sentimentList = sentimentL1(sentimentList, 'unigrams-pmilexicon2.txt')
-    print "third round"
     sentimentList = sentimentL2(sentimentList, 'positive-words.txt', 1)
-    print "fourth round"
     sentimentList = sentimentL2(sentimentList, 'negative-words.txt', -1)
+    sentimentList = sentimentL2(sentimentList, 'positive-emoticons.txt', 2)
+    sentimentList = sentimentL2(sentimentList, 'negative-emoticons.txt', 2)
 
     for key in tweet_dict.keys():
         #print key
