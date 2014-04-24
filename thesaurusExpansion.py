@@ -17,19 +17,32 @@ from operator import itemgetter
 strong_pos = 4
 strong_neg = -4
 
-def getSentimentList(sentimentList, filename):
-    with open(filename) as f:
-        for line in f.readlines():
-            line = line.rstrip()
-            pair = line.split()
-            if pair[0] not in sentimentList:
-                if float(pair[1]) > 0:
-                    sentimentList[pair[0]] = 1
-                else:
-                    sentimentList[pair[0]] = -1
-
+def sentimentL1(sentimentList, sList):
+    s = open(sList, 'r')
+    for line in s:
+        line = line.rstrip()
+        pair = line.split()
+        if pair[0] not in sentimentList:
+            if float(pair[1]) > 0:
+                sentimentList[pair[0]] = 1
+            else:
+                sentimentList[pair[0]] = -1
+    s.close()
     return sentimentList
 
+def sentimentL2(sentimentList, sList, value):
+    s = open(sList, 'r')
+    for line in s:
+        line = line.rstrip()
+        if line != '' and line[0] != '#':
+            if line not in sentimentList:
+                sentimentList[line] = value
+                #if value > 0:
+                #    sentimentList[line] = 1
+                #else:
+                #    sentimentList[line] = -1
+    s.close()
+    return sentimentList
 
 def synonyms(word, sentimentList):
     list = wn.synsets(word)
@@ -251,7 +264,7 @@ def clean(tweet):
     tweet = re.sub("\'s", " is", tweet)
     # Shrink all repeated spaces
     tweet = re.sub("\s+", " ", tweet)
-    
+
     stopword_file = open("stopwords.txt", "r")
     stopwords = list()
     for line in stopword_file.readlines():
@@ -268,21 +281,17 @@ def clean(tweet):
     #print tweet.encode('utf-8')
     return tweet_final
 
+
 #add words to sentiment list previously not there
-def bootstrap(tweet, weight, sentimentList):
-    tweetWords = tweet.split();
-    for word in tweetWords:
-        if 'http' in word:
-            continue
-        if word not in sentimentList:
+# def bootstrap(tweet, weight, sentimentList):
+#     for word in tweet:
+#         if word not in sentimentList:
 
-            sentimentList[word] = weight
-            # print "adding " + word
-
-            with open("sentimentlist.txt", 'a') as f:
-                f.write('\n'+word+ '\t\t' + str(weight))
-
-    return sentimentList
+def writeList(sentimentList):
+    with open("sentimentlist.txt", 'w') as f:
+        for key in sentimentList:
+            s = key + '\t\t' + str(sentimentList[key]) + '\n'
+            f.write(s)
 
 
 def main(argv):
@@ -322,19 +331,26 @@ def main(argv):
 
     tweet_file.close()
     sentimentList = {}
-    sentimentList = getSentimentList(sentimentList, "sentimentlist.txt")
+    sentimentList = sentimentL1(sentimentList, 'unigrams-pmilexicon1.txt')
+    sentimentList = sentimentL1(sentimentList, 'unigrams-pmilexicon2.txt')
+    sentimentList = sentimentL2(sentimentList, 'positive-words.txt', 1)
+    sentimentList = sentimentL2(sentimentList, 'negative-words.txt', -1)
+    sentimentList = sentimentL2(sentimentList, 'positive-emoticons.txt', 2)
+    sentimentList = sentimentL2(sentimentList, 'negative-emoticons.txt', 2)
 
     for key in tweet_dict.keys():
         #print key
         for tweet in tweet_dict[key]:
             tweet_score[key] += calculateSentiment(tweet, sentimentList)
-            if tweet_score[key] > strong_pos:
-                sentimentList = bootstrap(tweet, 1, sentimentList)
-            elif tweet_score[key] < strong_neg:
-                bootstrap(tweet, -1, sentimentList)
+            # if tweet_score[key] > strong_pos:
+            #     bootstrap(tweet, 1, sentimentList)
+            # elif tweet_score[key] < strong_neg:
+            #     bootstrap(tweet, -1, sentimentList)
 
         #print tweet_score[key]
     print tweet_score
+
+    writeList(sentimentList)
 
 
 if __name__ == '__main__':
