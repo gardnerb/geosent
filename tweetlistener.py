@@ -16,22 +16,22 @@ class TweetListener(StreamListener):
 
 
     def on_data(self, data):
-        
-        jsondata = json.loads(data)
-        if jsondata["coordinates"] != None:
-            print "coordinates"
-            self.on_status(data)
-            #not sure what these parts do
-            # if 'limit' in data:
-            #     if self.on_limit(json.loads(data)['limit']['track']) is False:
-            #         return False
-            # elif 'warning' in data:
-            #     warning = json.loads(data)['warnings']
-            #     print warning['message']
-            #     return False
-        elif jsondata["user"]["location"] != None:
-            print "user loc"
-            self.on_status(data)
+        self.on_status(data)
+        # jsondata = json.loads(data)
+        # if jsondata["coordinates"] != None:
+        #     print "coordinates"
+        #     self.on_status(data)
+        #     #not sure what these parts do
+        #     # if 'limit' in data:
+        #     #     if self.on_limit(json.loads(data)['limit']['track']) is False:
+        #     #         return False
+        #     # elif 'warning' in data:
+        #     #     warning = json.loads(data)['warnings']
+        #     #     print warning['message']
+        #     #     return False
+        # elif jsondata["user"]["location"] != None:
+        #     print "user loc"
+        #     self.on_status(data)
 
 
     def on_status(self, status):

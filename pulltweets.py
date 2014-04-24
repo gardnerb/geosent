@@ -27,8 +27,8 @@ auth.set_access_token(key, secret)
 api        = tweepy.API(auth)
 
 def main():
-    track = ['#bitcoin',] #change to w/e
-    file_prefix = 'bitcoin' #change to what you want the file prefixed with 
+    track = ['#microsoft',] #change to w/e
+    file_prefix = 'microsoft' #change to what you want the file prefixed with 
  
     listen = TweetListener(api, file_prefix)
     stream = tweepy.Stream(auth, listen)

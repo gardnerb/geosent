@@ -14,8 +14,8 @@ import json
 from nltk.corpus import wordnet as wn
 from operator import itemgetter
 
-strong_pos = 4
-strong_neg = -4
+# strong_pos = 4
+# strong_neg = -4
 
 def getSentimentList(sentimentList, filename):
     with open(filename) as f:
@@ -285,7 +285,7 @@ def bootstrap(tweet, weight, sentimentList):
     return sentimentList
 
 
-def main(argv):
+def main(argv, threshold):
 
     tweet_dict = dict()
     tweet_score = dict()
