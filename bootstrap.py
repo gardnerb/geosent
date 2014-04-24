@@ -59,7 +59,7 @@ def calculateSentiment(tweet, sentimentList):
             syn = synonyms(word, sentimentList)
             tweetValue += syn
             if syn < 0:
-                neg_cout += 1
+                neg_count += 1
             else: 
                 pos_count += 1
         else:
@@ -67,7 +67,7 @@ def calculateSentiment(tweet, sentimentList):
             #print word, sentimentList[word]
             tweetValue += syn
             if syn < 0:
-                neg_cout += 1
+                neg_count += 1
             else: 
                 pos_count += 1
 
@@ -77,6 +77,75 @@ def calculateSentiment(tweet, sentimentList):
         return (neg_count + 0.0) / (pos_count + neg_count + 0.0)
     else:
         return 0.0
+
+
+# Clean SGML tags from a file
+def clean(tweet):
+
+    tweet = tweet.encode('utf-8', 'ignore')
+    #print str(tweet)
+
+    tweet_data = list()
+    # Convert all letters to lower case
+    tweet = tweet.lower()
+    # Remove URLs
+    #tweet = re.sub("https?:\/\/[a-z0-9\/\.]*\b*", "", tweet)
+    #tweet = re.sub("https?:\/\/.*\b", "", tweet)
+    #tweet = re.sub("https?://[^\b]*", "", tweet)
+    # Remove usernames
+    tweet = re.sub("@\w*", "", tweet)
+    # Remove "RT" for retweet
+    tweet = re.sub("rt", "", tweet)
+    # Remove # before words
+    tweet = re.sub("#([a-z0-9])", "\g<1>", tweet)
+    # Remove numbers
+    #tweet = re.sub("[0-9]*", "", tweet)
+    # Remove unnecessary punctuation
+    #tweet = re.sub("\s[-\.,\/:]+\s", " ", tweet)
+    #tweet = re.sub("(-|\.|,){2,}", " ", tweet)
+    # Remove parenthesis
+    #tweet = re.sub("(\(|\))", "", tweet)
+    # Remove commas
+    tweet = re.sub("([a-z]), ", "\g<1> ", tweet)
+    # Remove periods at end of words
+    tweet = re.sub("([a-z]+)(\.|\?|!|;|:) ", "\g<1> ", tweet)
+    # Replace period at end of acronym... kind of hacky
+    #tweet = re.sub("([a-z\.])\.([a-z]+) ", "\g<1>.\g<2>. ", tweet)
+    # Remove periods and commas at end of numbers
+    #tweet = re.sub("(\d+)(\.|,) ", "\g<1> ", tweet)
+    # Remove unnecessary slashes
+    #tweet = re.sub("( \\\\|\\\\ )", " ", tweet)
+    #tweet = re.sub("( \/|\/ )", " ", tweet)
+    # Remove quotation marks
+    tweet = re.sub("(\'|\")+(\w*)", "\g<2>", tweet)
+    tweet = re.sub("(\w*)(\'|\")+", "\g<1>", tweet)
+    # Replace commas between letters with a space (eg hello,there)
+    tweet = re.sub("([a-z]+),([a-z]+)", "\g<1> \g<2>", tweet)
+    # Expand common contractions
+    tweet = re.sub("\'ll", " will", tweet)
+    tweet = re.sub("\'ve", " have", tweet)
+    tweet = re.sub("\'re", " are", tweet)
+    tweet = re.sub("n\'t", " not", tweet)
+    tweet = re.sub("\'s", " is", tweet)
+    # Shrink all repeated spaces
+    tweet = re.sub("\s+", " ", tweet)
+    
+    stopword_file = open("stopwords.txt", "r")
+    stopwords = list()
+    for line in stopword_file.readlines():
+        line = line.rstrip()
+        stopwords.append(line)
+    stopword_file.close()
+
+    # Remove stopwords
+    tweet_final = ''
+    for word in tweet.split(" "):
+        if word not in stopwords:
+            tweet_final = tweet_final + word + " "
+
+    #print tweet.encode('utf-8')
+    return tweet_final
+
 
 #add words to sentiment list previously not there
 def bootstrap(tweet, weight, sentimentList):
@@ -90,6 +159,7 @@ def bootstrap(tweet, weight, sentimentList):
             # print "adding " + word
 
             with open("sentimentlist.txt", 'a') as f:
+                word = word.replace(u'\u2019', '')
                 f.write('\n'+word+ '\t\t' + str(weight))
 
     return sentimentList
@@ -100,7 +170,8 @@ def main(argv, threshold):
     neg_threshold = 0.0 - threshold
     pos_threshold = 0.0 + threshold
 
-    tweet_dict = dict()
+    tweet_list = []
+    # tweet_dict = {}
     tweet_score = dict()
 
     # Open raw tweet file provided on command line
@@ -112,10 +183,10 @@ def main(argv, threshold):
     while tweet_line:
         tweet_obj = json.loads(tweet_line)
         # Find location
-        userProvidedLoc = tweet_obj['user']['location']
-        if userProvidedLoc:
-            #print userProvidedLoc
-            loc = location(userProvidedLoc)
+        # userProvidedLoc = tweet_obj['user']['location']
+        # if userProvidedLoc:
+        #     #print userProvidedLoc
+        #     loc = location(userProvidedLoc)
             #print loc
         # Get and clean text of tweet
         tweet = tweet_obj['text']
@@ -123,12 +194,13 @@ def main(argv, threshold):
         #print tweet.encode('utf-8')
         #print tweet_content
         # Insert into dict
-        if loc in tweet_dict.keys():
-            tweet_dict[loc].append(tweet_content)
-        else:
-            tweet_dict[loc] = list()
-            tweet_score[loc] = 0
-            tweet_dict[loc].append(tweet_content)
+        # if loc in tweet_dict.keys():
+        #     tweet_dict[loc].append(tweet_content)
+        # else:
+        #     tweet_dict[loc] = list()
+        #     tweet_score[loc] = 0
+        #     tweet_dict[loc].append(tweet_content)
+        tweet_list.append(tweet_content)
 
         tweet_line = tweet_file.readline().replace("\n", "")
 
@@ -137,21 +209,20 @@ def main(argv, threshold):
     sentimentList = {}
     sentimentList = getSentimentList(sentimentList, "sentimentlist.txt")
 
-    for key in tweet_dict.keys():
+    for t in tweet_list:
         #print key
-        for tweet in tweet_dict[key]:
-            tweet_score[key] += calculateSentiment(tweet, sentimentList)
-            if tweet_score[key] > pos_threshold:
-                sentimentList = bootstrap(tweet, 1, sentimentList)
-            elif tweet_score[key] < neg_threshold:
-                bootstrap(tweet, -1, sentimentList)
+        tweet_score = calculateSentiment(tweet, sentimentList)
+        if tweet_score > pos_threshold:
+            sentimentList = bootstrap(tweet, 1, sentimentList)
+        elif tweet_score < neg_threshold:
+            bootstrap(tweet, -1, sentimentList)
 
         #print tweet_score[key]
     # print tweet_score
 
 
 if __name__ == '__main__':
-    main(sys.argv[1])
+    main(sys.argv[1], float(sys.argv[2]))
 
 # def location(user_loc):
 #     user_loc = user_loc.lower()
@@ -287,69 +358,3 @@ if __name__ == '__main__':
 #     elif re.search("detroit", user_loc): return "mi"
 #     else: return "null"    
 
-# # Clean SGML tags from a file
-# def clean(tweet):
-
-#     tweet = tweet.encode('utf-8', 'ignore')
-#     #print str(tweet)
-
-#     tweet_data = list()
-#     # Convert all letters to lower case
-#     tweet = tweet.lower()
-#     # Remove URLs
-#     #tweet = re.sub("https?:\/\/[a-z0-9\/\.]*\b*", "", tweet)
-#     #tweet = re.sub("https?:\/\/.*\b", "", tweet)
-#     #tweet = re.sub("https?://[^\b]*", "", tweet)
-#     # Remove usernames
-#     tweet = re.sub("@\w*", "", tweet)
-#     # Remove "RT" for retweet
-#     tweet = re.sub("rt", "", tweet)
-#     # Remove # before words
-#     tweet = re.sub("#([a-z0-9])", "\g<1>", tweet)
-#     # Remove numbers
-#     #tweet = re.sub("[0-9]*", "", tweet)
-#     # Remove unnecessary punctuation
-#     #tweet = re.sub("\s[-\.,\/:]+\s", " ", tweet)
-#     #tweet = re.sub("(-|\.|,){2,}", " ", tweet)
-#     # Remove parenthesis
-#     #tweet = re.sub("(\(|\))", "", tweet)
-#     # Remove commas
-#     tweet = re.sub("([a-z]), ", "\g<1> ", tweet)
-#     # Remove periods at end of words
-#     tweet = re.sub("([a-z]+)(\.|\?|!|;|:) ", "\g<1> ", tweet)
-#     # Replace period at end of acronym... kind of hacky
-#     #tweet = re.sub("([a-z\.])\.([a-z]+) ", "\g<1>.\g<2>. ", tweet)
-#     # Remove periods and commas at end of numbers
-#     #tweet = re.sub("(\d+)(\.|,) ", "\g<1> ", tweet)
-#     # Remove unnecessary slashes
-#     #tweet = re.sub("( \\\\|\\\\ )", " ", tweet)
-#     #tweet = re.sub("( \/|\/ )", " ", tweet)
-#     # Remove quotation marks
-#     tweet = re.sub("(\'|\")+(\w*)", "\g<2>", tweet)
-#     tweet = re.sub("(\w*)(\'|\")+", "\g<1>", tweet)
-#     # Replace commas between letters with a space (eg hello,there)
-#     tweet = re.sub("([a-z]+),([a-z]+)", "\g<1> \g<2>", tweet)
-#     # Expand common contractions
-#     tweet = re.sub("\'ll", " will", tweet)
-#     tweet = re.sub("\'ve", " have", tweet)
-#     tweet = re.sub("\'re", " are", tweet)
-#     tweet = re.sub("n\'t", " not", tweet)
-#     tweet = re.sub("\'s", " is", tweet)
-#     # Shrink all repeated spaces
-#     tweet = re.sub("\s+", " ", tweet)
-    
-#     stopword_file = open("stopwords.txt", "r")
-#     stopwords = list()
-#     for line in stopword_file.readlines():
-#         line = line.rstrip()
-#         stopwords.append(line)
-#     stopword_file.close()
-
-#     # Remove stopwords
-#     tweet_final = ''
-#     for word in tweet.split(" "):
-#         if word not in stopwords:
-#             tweet_final = tweet_final + word + " "
-
-#     #print tweet.encode('utf-8')
-#     return tweet_final
