@@ -19,7 +19,7 @@ strong_neg = -4
 
 def getSentimentList(sentimentList, filename):
     with open(filename) as f:
-        for line in f.read():
+        for line in f.readlines():
             line = line.rstrip()
             pair = line.split()
             if pair[0] not in sentimentList:
@@ -260,24 +260,21 @@ def clean(tweet):
     #print tweet.encode('utf-8')
     return tweet
 
-add words to sentiment list previously not there
+#add words to sentiment list previously not there
 def bootstrap(tweet, weight, sentimentList):
-    for word in tweet:
+    tweetWords = tweet.split();
+    for word in tweetWords:
+        if 'http' in word:
+            continue
         if word not in sentimentList:
 
             sentimentList[word] = weight
+            # print "adding " + word
 
             with open("sentimentlist.txt", 'a') as f:
-                f.write(word+ '\t\t' + str(weight) + '\n')
+                f.write('\n'+word+ '\t\t' + str(weight))
 
     return sentimentList
-
-
-def writeList(sentimentList):
-    with open("sentimentlist.txt", 'w') as f:
-        for key in sentimentList:
-            s = key + '\t\t' + str(sentimentList[key]) + '\n'
-            f.write(s)
 
 
 def main(argv):
@@ -330,8 +327,6 @@ def main(argv):
 
         #print tweet_score[key]
     print tweet_score
-
-    writeList(sentimentList)
 
 
 if __name__ == '__main__':
