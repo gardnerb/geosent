@@ -2,6 +2,7 @@
 
 import tweepy
 import json
+import time
 
 cred = open('credentials.txt')
 
@@ -35,6 +36,7 @@ for line in id_file:
     #print results._json
     if results != '':
         json_out.write(str(results._json) + "\n")
+    time.sleep(6)
 
 
 id_file.close()
