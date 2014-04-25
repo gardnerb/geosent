@@ -157,72 +157,103 @@ def bootstrap(tweet, weight, sentimentList):
 
             sentimentList[word] = weight
             # print "adding " + word
-
-            with open("sentimentlist.txt", 'a') as f:
-                word = word.replace(u'\u2019', '')
-                f.write('\n'+word+ '\t\t' + str(weight))
-
+            try:
+                with open("sentimentlist.txt", 'a') as f:
+                    word = word.replace(u'\u2019', '')
+                    f.write('\n'+word+ '\t\t' + str(weight))
+            except:
+                ggggg = 1
     return sentimentList
 
 
-def main(argv, threshold):
+def main(argv):
 
-    neg_threshold = 0.0 - threshold
-    pos_threshold = 0.0 + threshold
+    for x in range(20,81):
+        threshold = float(x/100)
+        neg_threshold = 0.0 - threshold
+        pos_threshold = 0.0 + threshold
 
-    tweet_list = []
-    # tweet_dict = {}
-    tweet_score = dict()
+        tweet_list = []
+        # tweet_dict = {}
+        tweet_score = dict()
 
-    # Open raw tweet file provided on command line
-    tweet_file = open(argv, "r")
-    tweet_line = tweet_file.readline().replace("\n", "")
-
-    loc = ''
-    # For each tweet, process and insert into dict
-    while tweet_line:
-        tweet_obj = json.loads(tweet_line)
-        # Find location
-        # userProvidedLoc = tweet_obj['user']['location']
-        # if userProvidedLoc:
-        #     #print userProvidedLoc
-        #     loc = location(userProvidedLoc)
-            #print loc
-        # Get and clean text of tweet
-        tweet = tweet_obj['text']
-        tweet_content = clean(tweet)
-        #print tweet.encode('utf-8')
-        #print tweet_content
-        # Insert into dict
-        # if loc in tweet_dict.keys():
-        #     tweet_dict[loc].append(tweet_content)
-        # else:
-        #     tweet_dict[loc] = list()
-        #     tweet_score[loc] = 0
-        #     tweet_dict[loc].append(tweet_content)
-        tweet_list.append(tweet_content)
-
+        # Open raw tweet file provided on command line
+        tweet_file = open(argv, "r")
         tweet_line = tweet_file.readline().replace("\n", "")
 
+        loc = ''
+        # For each tweet, process and insert into dict
+        while tweet_line:
+            tweet_obj = json.loads(tweet_line)
+            # Find location
+            # userProvidedLoc = tweet_obj['user']['location']
+            # if userProvidedLoc:
+            #     #print userProvidedLoc
+            #     loc = location(userProvidedLoc)
+                #print loc
+            # Get and clean text of tweet
+            tweet = tweet_obj['text']
+            tweet_content = clean(tweet)
+            #print tweet.encode('utf-8')
+            #print tweet_content
+            # Insert into dict
+            # if loc in tweet_dict.keys():
+            #     tweet_dict[loc].append(tweet_content)
+            # else:
+            #     tweet_dict[loc] = list()
+            #     tweet_score[loc] = 0
+            #     tweet_dict[loc].append(tweet_content)
+            tweet_list.append(tweet_content)
 
-    tweet_file.close()
-    sentimentList = {}
-    sentimentList = getSentimentList(sentimentList, "sentimentlist.txt")
+            tweet_line = tweet_file.readline().replace("\n", "")
 
-    for t in tweet_list:
-        #print key
-        tweet_score = calculateSentiment(tweet, sentimentList)
-        if tweet_score > pos_threshold:
-            sentimentList = bootstrap(tweet, 1, sentimentList)
-        elif tweet_score < neg_threshold:
-            bootstrap(tweet, -1, sentimentList)
+
+        tweet_file.close()
+        sentimentList = {}
+        sentimentList = getSentimentList(sentimentList, "sentcpy.txt")
+
+        for t in tweet_list:
+            #print key
+            tweet_score = calculateSentiment(tweet, sentimentList)
+            if tweet_score > pos_threshold:
+                sentimentList = bootstrap(tweet, 1, sentimentList)
+            elif tweet_score < neg_threshold:
+                bootstrap(tweet, -1, sentimentList)
+        sentimentList2 = {}
+        try:
+            w = open("sentimentList" + str(x) + ".txt", 'r')
+            for line in w:
+                line = line.rstrip()
+                pair = line.split()
+                sentimentList2[pair[0]] = pair[1]
+            w.close()
+        except:
+            w = open("sentimentList" + str(x) + ".txt", 'w')
+            w.close()
+        r = open("sentimentList" + str(x) + ".txt", 'a')
+        for key in sentimentList:
+            #try:
+            #    slkjflsd = sentimentList[key]
+            #    lskjfldsjfl = sentimentList2[key]
+            #except:
+            #    print "YOU SUCK"
+            if key not in sentimentList2:
+                try:
+                    r.write(key + " " + str(sentimentList[key]) + "\n")
+                except:
+                    try:
+                        word = key.replace(u'\u2019', '')
+                        r.write(word + " " + str(sentimentList[key]) + "\n")
+                    except:
+                        ljlk = 0
+        r.close()
 
         #print tweet_score[key]
     # print tweet_score
 
 
 if __name__ == '__main__':
-    main(sys.argv[1], float(sys.argv[2]))
+    main(sys.argv[1])
 
 # def location(user_loc):
 #     user_loc = user_loc.lower()
