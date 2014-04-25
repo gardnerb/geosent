@@ -16,6 +16,7 @@ from operator import itemgetter
 
 strong_pos = 4
 strong_neg = -4
+sentimentList = {}
 
 def sentimentL1(sentimentList, sList):
     s = open(sList, 'r')
@@ -294,6 +295,31 @@ def writeList(sentimentList):
             f.write(s)
 
 
+def init_thes():
+    global sentimentList
+    sentimentList = sentimentL1(sentimentList, 'unigrams-pmilexicon1.txt')
+    sentimentList = sentimentL1(sentimentList, 'unigrams-pmilexicon2.txt')
+    sentimentList = sentimentL2(sentimentList, 'positive-words.txt', 1)
+    sentimentList = sentimentL2(sentimentList, 'negative-words.txt', -1)
+    sentimentList = sentimentL2(sentimentList, 'positive-emoticons.txt', 2)
+    sentimentList = sentimentL2(sentimentList, 'negative-emoticons.txt', -2)
+    return sentimentList
+
+def test(argv, sentList):
+    tweet_id_dict = dict()
+    tweet_file = open(argv, "r")
+    tweet_line = tweet_file.readline().rstrip()
+    while tweet_line:
+        #tweet_obj = json.loads(tweet_line)
+        #tweet_id = tweet_obj['id']
+        tweet_id = re.sub(".*\'id\': ([0-9]{18}).*", "\g<1>", tweet_line)
+        tweet_content = re.sub(".*\'truncated\': False, u\'text\': u(?P<quote>[\'\"])(.*?)(?P=quote).*", "\g<2>", tweet_line)
+        tweet_content = clean(tweet_content)
+        tweet_id_dict[tweet_id] = calculateSentiment(tweet_content, sentList)
+        tweet_line = tweet_file.readline().rstrip()
+    tweet_file.close()
+    return tweet_id_dict
+
 def main(argv):
 
     tweet_dict = dict()
@@ -310,14 +336,10 @@ def main(argv):
         # Find location
         userProvidedLoc = tweet_obj['user']['location']
         if userProvidedLoc:
-            #print userProvidedLoc
             loc = location(userProvidedLoc)
-            #print loc
         # Get and clean text of tweet
         tweet = tweet_obj['text']
         tweet_content = clean(tweet)
-        #print tweet.encode('utf-8')
-        #print tweet_content
         # Insert into dict
         if loc in tweet_dict.keys():
             tweet_dict[loc].append(tweet_content)
@@ -330,14 +352,6 @@ def main(argv):
 
 
     tweet_file.close()
-    sentimentList = {}
-    sentimentList = sentimentL1(sentimentList, 'unigrams-pmilexicon1.txt')
-    sentimentList = sentimentL1(sentimentList, 'unigrams-pmilexicon2.txt')
-    sentimentList = sentimentL2(sentimentList, 'positive-words.txt', 1)
-    sentimentList = sentimentL2(sentimentList, 'negative-words.txt', -1)
-    sentimentList = sentimentL2(sentimentList, 'positive-emoticons.txt', 2)
-    sentimentList = sentimentL2(sentimentList, 'negative-emoticons.txt', 2)
-
     for key in tweet_dict.keys():
         #print key
         for tweet in tweet_dict[key]:
@@ -354,5 +368,6 @@ def main(argv):
 
 
 if __name__ == '__main__':
+    init_thes()
     main(sys.argv[1])
 
