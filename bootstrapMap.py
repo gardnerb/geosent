@@ -237,8 +237,6 @@ def test(argv, sentList):
     tweet_file = open(argv, "r")
     tweet_line = tweet_file.readline().rstrip()
     while tweet_line:
-        #tweet_obj = json.loads(tweet_line)
-        #tweet_id = tweet_obj['id']
         tweet_id = re.sub(".*\'id\': ([0-9]{18}).*", "\g<1>", tweet_line)
         tweet_content = re.sub(".*\'truncated\': False, u\'text\': u(?P<quote>[\'\"])(.*?)(?P=quote).*", "\g<2>", tweet_line)
         tweet_content = clean(tweet_content)
