@@ -5,7 +5,7 @@
 #   insert into map of location to tweet
 
 # Format of dictionary:
-#   tweet_dict[state_abr] = list(list(each, word, in tweet))
+#   tweet_dict[state_abr] = list(tweets)
 #   This can be changed if necessary.
 
 import sys
@@ -31,35 +31,6 @@ def sentimentL1(sentimentList, sList):
     s.close()
     return sentimentList
 
-def sentimentL2(sentimentList, sList, value):
-    s = open(sList, 'r')
-    for line in s:
-        line = line.rstrip()
-        if line != '' and line[0] != '#':
-            if line not in sentimentList:
-                sentimentList[line] = value
-                #if value > 0:
-                #    sentimentList[line] = 1
-                #else:
-                #    sentimentList[line] = -1
-    s.close()
-    return sentimentList
-
-def synonyms(word, sentimentList):
-    list = wn.synsets(word)
-    score = 0
-    for similarWord in list:
-        for word in similarWord.lemma_names:
-            word = word.lower()
-            if word in sentimentList:
-                score += sentimentList[word]
-    #takes the average of the words
-    if score > 0:
-        score = 1
-    elif score < 0:
-        score = -1
-    return score
-
 #assuming tweet is a string
 def calculateSentiment(tweet, sentimentList):
     tweetWords = tweet.split()
@@ -67,18 +38,9 @@ def calculateSentiment(tweet, sentimentList):
     for word in tweetWords:
         if "https?" in word:
             continue
-        if word not in sentimentList:
-            syn = synonyms(word, sentimentList)
-            tweetValue += syn
-            #print word, syn
-            #if syn < 0:
-            #    print "HURRAY!!!!"
-        else:
+        if word in sentimentList:
             syn = sentimentList[word]
-            #print word, sentimentList[word]
             tweetValue += syn
-            #if syn < 0:
-            #    print "HURRAY!!!!"
     return tweetValue
 
 def location(user_loc):
@@ -224,34 +186,16 @@ def clean(tweet):
     tweet_data = list()
     # Convert all letters to lower case
     tweet = tweet.lower()
-    # Remove URLs
-    #tweet = re.sub("https?:\/\/[a-z0-9\/\.]*\b*", "", tweet)
-    #tweet = re.sub("https?:\/\/.*\b", "", tweet)
-    #tweet = re.sub("https?://[^\b]*", "", tweet)
     # Remove usernames
     tweet = re.sub("@\w*", "", tweet)
     # Remove "RT" for retweet
     tweet = re.sub("rt", "", tweet)
     # Remove # before words
     tweet = re.sub("#([a-z0-9])", "\g<1>", tweet)
-    # Remove numbers
-    #tweet = re.sub("[0-9]*", "", tweet)
-    # Remove unnecessary punctuation
-    #tweet = re.sub("\s[-\.,\/:]+\s", " ", tweet)
-    #tweet = re.sub("(-|\.|,){2,}", " ", tweet)
-    # Remove parenthesis
-    #tweet = re.sub("(\(|\))", "", tweet)
     # Remove commas
     tweet = re.sub("([a-z]), ", "\g<1> ", tweet)
     # Remove periods at end of words
     tweet = re.sub("([a-z]+)(\.|\?|!|;|:) ", "\g<1> ", tweet)
-    # Replace period at end of acronym... kind of hacky
-    #tweet = re.sub("([a-z\.])\.([a-z]+) ", "\g<1>.\g<2>. ", tweet)
-    # Remove periods and commas at end of numbers
-    #tweet = re.sub("(\d+)(\.|,) ", "\g<1> ", tweet)
-    # Remove unnecessary slashes
-    #tweet = re.sub("( \\\\|\\\\ )", " ", tweet)
-    #tweet = re.sub("( \/|\/ )", " ", tweet)
     # Remove quotation marks
     tweet = re.sub("(\'|\")+(\w*)", "\g<2>", tweet)
     tweet = re.sub("(\w*)(\'|\")+", "\g<1>", tweet)
@@ -283,26 +227,9 @@ def clean(tweet):
     return tweet_final
 
 
-#add words to sentiment list previously not there
-# def bootstrap(tweet, weight, sentimentList):
-#     for word in tweet:
-#         if word not in sentimentList:
-
-def writeList(sentimentList):
-    with open("sentimentlist.txt", 'w') as f:
-        for key in sentimentList:
-            s = key + '\t\t' + str(sentimentList[key]) + '\n'
-            f.write(s)
-
-
-def init_thes():
+def init_boot(sentFile):
     global sentimentList
-    sentimentList = sentimentL1(sentimentList, 'unigrams-pmilexicon1.txt')
-    sentimentList = sentimentL1(sentimentList, 'unigrams-pmilexicon2.txt')
-    sentimentList = sentimentL2(sentimentList, 'positive-words.txt', 1)
-    sentimentList = sentimentL2(sentimentList, 'negative-words.txt', -1)
-    sentimentList = sentimentL2(sentimentList, 'positive-emoticons.txt', 2)
-    sentimentList = sentimentL2(sentimentList, 'negative-emoticons.txt', -2)
+    sentimentList = sentimentL1(sentimentList, sentFile)
     return sentimentList
 
 def test(argv, sentList):
@@ -350,25 +277,17 @@ def main(argv):
             tweet_dict[loc].append(tweet_content)
 
         tweet_line = tweet_file.readline().replace("\n", "")
-
-
     tweet_file.close()
+
+
     for key in tweet_dict.keys():
-        #print key
         for tweet in tweet_dict[key]:
             tweet_score[key] += calculateSentiment(tweet, sentimentList)
-            # if tweet_score[key] > strong_pos:
-            #     bootstrap(tweet, 1, sentimentList)
-            # elif tweet_score[key] < strong_neg:
-            #     bootstrap(tweet, -1, sentimentList)
-
         #print tweet_score[key]
     print tweet_score
 
-    writeList(sentimentList)
-
 
 if __name__ == '__main__':
-    init_thes()
-    main(sys.argv[1])
+    init_boot(sys.argv[1])
+    main(sys.argv[2])
 
