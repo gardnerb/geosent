@@ -283,13 +283,9 @@ def clean(tweet):
     return tweet_final
 
 
-#add words to sentiment list previously not there
-# def bootstrap(tweet, weight, sentimentList):
-#     for word in tweet:
-#         if word not in sentimentList:
 
 def writeList(sentimentList):
-    with open("sentimentlist.txt", 'w') as f:
+    with open("sentimentlistThesaurus.txt", 'w') as f:
         for key in sentimentList:
             s = key + '\t\t' + str(sentimentList[key]) + '\n'
             f.write(s)
@@ -325,6 +321,7 @@ def main(argv):
     global sentimentList
     tweet_dict = dict()
     tweet_score = dict()
+    region_count = dict()
 
     # Open raw tweet file provided on command line
     tweet_file = open(argv, "r")
@@ -353,17 +350,20 @@ def main(argv):
 
 
     tweet_file.close()
-    for key in tweet_dict.keys():
+    for key in tweet_dict:
+        region_count[key] = 0
         #print key
         for tweet in tweet_dict[key]:
             tweet_score[key] += calculateSentiment(tweet, sentimentList)
-            # if tweet_score[key] > strong_pos:
-            #     bootstrap(tweet, 1, sentimentList)
-            # elif tweet_score[key] < strong_neg:
-            #     bootstrap(tweet, -1, sentimentList)
+            region_count[key] += 1
 
-        #print tweet_score[key]
-    print tweet_score
+    for key in sorted(tweet_score.keys()):
+        output =  key + ": "
+        if region_count[key] == 0:
+            output = output + "none"
+        else:
+            output = output + str(tweet_score[key] / region_count[key])
+        print output
 
     writeList(sentimentList)
 

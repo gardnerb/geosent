@@ -226,6 +226,13 @@ def clean(tweet):
     #print tweet.encode('utf-8')
     return tweet_final
 
+def writeList(sentimentList):
+    with open("sentimentlistBootstrap.txt", 'w') as f:
+        for key in sentimentList:
+            s = key + '\t\t' + str(sentimentList[key]) + '\n'
+            f.write(s)
+
+
 
 def init_boot(sentFile):
     global sentimentList
@@ -250,6 +257,7 @@ def main(argv):
     global sentimentList
     tweet_dict = dict()
     tweet_score = dict()
+    region_count = dict()
 
     # Open raw tweet file provided on command line
     tweet_file = open(argv, "r")
@@ -278,12 +286,22 @@ def main(argv):
     tweet_file.close()
 
 
-    for key in tweet_dict.keys():
+    for key in tweet_dict:
+        region_count[key] = 0
         for tweet in tweet_dict[key]:
             tweet_score[key] += calculateSentiment(tweet, sentimentList)
+            region_count[key] += 1
         #print tweet_score[key]
-    print tweet_score
+    
+    for key in sorted(tweet_score.keys()):
+        output =  key + ": "
+        if region_count[key] == 0:
+            output = output + "none"
+        else:
+            output = output + str(tweet_score[key] / region_count[key])
+        print output
 
+    writeList(sentimentList)
 
 if __name__ == '__main__':
     init_boot(sys.argv[1])
