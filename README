@@ -1,3 +1,9 @@
+The link to our implementation and files is located at:
+
+https://github.com/gardnerb/geosent
+
+It is a public repository so you can just download everything you need.
+
 Files:
 
     thesaurusExpansion.py uses a strictly thesaurus-based expansion. We take
