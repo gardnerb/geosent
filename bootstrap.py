@@ -140,7 +140,7 @@ def bootstrap(tweet, weight, sentimentList):
             sentimentList[word] = weight
             # print "adding " + word
             try:
-                with open("sentimentlist.txt", 'a') as f:
+                with open("./sentLists/sentimentlist.txt", 'a') as f:
                     word = word.replace(u'\u2019', '')
                     f.write('\n'+word+ '\t\t' + str(weight))
             except:
@@ -177,7 +177,7 @@ def main(argv):
 
         tweet_file.close()
         sentimentList = {}
-        sentimentList = getSentimentList(sentimentList, "sentcpy.txt")
+        sentimentList = getSentimentList(sentimentList, "./sentListssentcpy.txt")
 
         for t in tweet_list:
             #print key
@@ -188,16 +188,16 @@ def main(argv):
                 bootstrap(tweet, -1, sentimentList)
         sentimentList2 = {}
         try:
-            w = open("sentimentList" + str(x) + ".txt", 'r')
+            w = open("./sentLists/sentimentList" + str(x) + ".txt", 'r')
             for line in w:
                 line = line.rstrip()
                 pair = line.split()
                 sentimentList2[pair[0]] = pair[1]
             w.close()
         except:
-            w = open("sentimentList" + str(x) + ".txt", 'w')
+            w = open("./sentLists/sentimentList" + str(x) + ".txt", 'w')
             w.close()
-        r = open("sentimentList" + str(x) + ".txt", 'a')
+        r = open("./sentList/sentimentList" + str(x) + ".txt", 'a')
         for key in sentimentList:
             #try:
             #    slkjflsd = sentimentList[key]

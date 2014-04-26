@@ -25,7 +25,7 @@ def main(in_file, tweets):
     best = 0
     hand_sentiment = hand_labeled(in_file)
     for i in range (20, 81):
-        sentFile = "sentimentList" + str(i) + ".txt"
+        sentFile = "./sentLists/sentimentList" + str(i) + ".txt"
         sentList = init_boot(sentFile)
         boot_test = test(tweets, sentList)
 

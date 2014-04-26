@@ -227,7 +227,7 @@ def clean(tweet):
     return tweet_final
 
 def writeList(sentimentList):
-    with open("sentimentlistBootstrap.txt", 'w') as f:
+    with open("./sentLists/sentimentlistBootstrap.txt", 'w') as f:
         for key in sentimentList:
             s = key + '\t\t' + str(sentimentList[key]) + '\n'
             f.write(s)

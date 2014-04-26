@@ -285,7 +285,7 @@ def clean(tweet):
 
 
 def writeList(sentimentList):
-    with open("sentimentlistThesaurus.txt", 'w') as f:
+    with open("./sentLists/sentimentlistThesaurus.txt", 'w') as f:
         for key in sentimentList:
             s = key + '\t\t' + str(sentimentList[key]) + '\n'
             f.write(s)
@@ -293,12 +293,12 @@ def writeList(sentimentList):
 
 def init_thes():
     global sentimentList
-    sentimentList = sentimentL1(sentimentList, 'unigrams-pmilexicon1.txt')
-    sentimentList = sentimentL1(sentimentList, 'unigrams-pmilexicon2.txt')
-    sentimentList = sentimentL2(sentimentList, 'positive-words.txt', 1)
-    sentimentList = sentimentL2(sentimentList, 'negative-words.txt', -1)
-    sentimentList = sentimentL2(sentimentList, 'positive-emoticons.txt', 2)
-    sentimentList = sentimentL2(sentimentList, 'negative-emoticons.txt', -2)
+    sentimentList = sentimentL1(sentimentList, './wordLists/unigrams-pmilexicon1.txt')
+    sentimentList = sentimentL1(sentimentList, './wordLists/unigrams-pmilexicon2.txt')
+    sentimentList = sentimentL2(sentimentList, './wordLists/positive-words.txt', 1)
+    sentimentList = sentimentL2(sentimentList, './wordLists/negative-words.txt', -1)
+    sentimentList = sentimentL2(sentimentList, './wordLists/positive-emoticons.txt', 2)
+    sentimentList = sentimentL2(sentimentList, './wordLists/negative-emoticons.txt', -2)
     return sentimentList
 
 def test(argv, sentList):
