@@ -1,0 +1,49 @@
+Files:
+
+    thesaurusExpansion.py uses a strictly thesaurus-based expansion. We take
+    the raw json data and for every word we do not recognize in our sentiment
+    lists (lists of positive and negative words), we look up synonyms using
+    WordNet. If the synonym is found in our sentiment lists, we use the 
+    corresponding sentiment. Otherwise, do not consider the word in calculating
+    sentiment. Output will be an alphabetical list of states with their average
+    sentiment. If a state is not in the list, it did not appear in our corpus.
+    To use:
+
+        python thesaurusExpansion.py <rawdata.json>
+
+    bootstrapMap.py uses a pre-computed list of words and their sentiments, and
+    calculates the average sentiment of the tweets corresponding to each state.
+    Output will be an alphabetical list of states with their average sentiment.
+    To use:
+
+        python bootstrapMap.py sentimentList.txt <rawdata.json>
+
+    bootstrap.py creates a sentiment list by combining bootstrapping and 
+    thesaurus lookups. We start with a list of known words and their sentiments.
+    Each word we encounter that is not on this list is looked up in the 
+    thesaurus. If we find it, we add that new word to the sentiment list with 
+    its synonym's sentiment value. If not, we calculate the sentiment of the 
+    tweet without the known words, and if it is above a certain threshold, we 
+    add it to the list with the sentiment value of the rest of the tweet.
+    For every new word it finds at a particular threshold, it will append to
+    the sentimentList*.txt. You can then use this for the bootstrapMap.py
+    method.
+    To use:
+
+        python bootstrap.py <trainingdata.json>
+
+    thesaurusEval.py compares our thesaurus method to the hand-labeled tweets 
+    we are using for evaluation purposes. It reads in the hand-labeled values, 
+    then calls our methods on each tweet, and compares the output.
+    To use:
+
+        python thesaurusEval.py sanders-twitter-0.2/corpus.csv evalTweets.json
+
+    evalBootstrapping.py compares our bootstrapping and thesaurus method to 
+    the hand-labeled tweets we are using for evaluation. It reads in the 
+    hand-labeled tweets, then calls our methods on each tweet in the
+    hand-labeled corpus, and outputs the accuracy.
+
+        python evalBootstrapping.py sanders-twitter-0.2/corpus.csv evalTweets.json
+
+
